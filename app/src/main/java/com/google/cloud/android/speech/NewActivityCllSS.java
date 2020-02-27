@@ -19,8 +19,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import io.socket.client.IO;
@@ -94,6 +98,8 @@ public class NewActivityCllSS extends AppCompatActivity {
         setContentView(R.layout.new_activity);
         text = (TextView) findViewById(R.id.text);
 
+
+        goToReadTextFile();
         Log.i(TAG, "Creating the Audio Client with minimum buffer of " + BUFFER_SIZE + " bytes");
         m_androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         {
@@ -127,6 +133,26 @@ public class NewActivityCllSS extends AppCompatActivity {
         mAdapter = new ResultAdapter(results);
         mRecyclerView.setAdapter(mAdapter);
     }
+
+    private void goToReadTextFile() {
+        try {
+            InputStream is = getResources().openRawResource(R.raw.phrases_android);
+            String str="";
+            StringBuffer buf = new StringBuffer();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            if (is!=null) {
+                while ((str = reader.readLine()) != null) {
+                    System.out.println(str);
+                    buf.append(str + "\n" );
+                }
+            }
+            is.close();
+
+        }catch (Exception  e){
+
+        }
+    }
+
     private void startStreamingAudio() {
         Log.i(TAG, "Starting the audio stream");
         gotojoinSoket();
