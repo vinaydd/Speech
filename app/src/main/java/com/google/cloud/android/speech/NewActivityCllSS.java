@@ -126,7 +126,6 @@ public class NewActivityCllSS extends AppCompatActivity {
             }
         });
 
-
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         ArrayList<String> results =new ArrayList<>();
