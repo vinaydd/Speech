@@ -41,11 +41,138 @@
 
     </android.support.design.widget.AppBarLayout>
 
+
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:overScrollMode="ifContentScrolls"
+        android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+
+            >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content">
+                <Button
+                    android:layout_width="match_parent"
+                    android:background="@color/primary"
+                    android:text="Start Dictation"
+                    android:backgroundTint="@color/accent"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginRight="40dp"
+                    android:clickable="true"
+                    android:textColor="@android:color/white"
+                    android:layout_height="wrap_content">
+
+                </Button>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="15dp"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:gravity="center|left"
+                    android:text="Chief Complaints:"
+                    android:textSize="22sp"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="@android:color/black"
+                    android:layout_height="wrap_content">
+
+                </TextView>
+
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="10dp"
+                android:minHeight="200dp"
+                android:background="@drawable/bc"
+                android:layout_height="wrap_content">
+
+
+                <TextView
+                    android:id="@+id/subjective"
+                    android:layout_width="match_parent"
+                    android:gravity="top|left"
+                    android:hint="chief complaints"
+                    android:padding="4dp"
+                    android:textSize="22sp"
+                    android:scrollbars="horizontal"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="#504D4D"
+                    android:layout_height="wrap_content">
+
+                </TextView>
+
+
+            </LinearLayout>
+
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="15dp"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:gravity="center|left"
+                    android:text="Review of Systems:"
+                    android:textSize="22sp"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="@android:color/black"
+                    android:layout_height="wrap_content">
+
+                </TextView>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="10dp"
+                android:scrollbars="vertical"
+                android:background="@drawable/bc"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/objective"
+                    android:layout_width="match_parent"
+                    android:gravity="top|left"
+                    android:hint="review of systems"
+                    android:padding="4dp"
+                    android:minHeight="200dp"
+                    android:textSize="22sp"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="#504D4D"
+                    android:layout_height="wrap_content">
+                </TextView>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
+        android:visibility="gone"
         android:paddingBottom="@dimen/spacing_small"
         android:paddingTop="@dimen/spacing_small"
         app:behavior_overlapTop="128dp"

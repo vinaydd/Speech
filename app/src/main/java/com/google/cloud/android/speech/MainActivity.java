@@ -72,6 +72,15 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     private SpeechService mSpeechService;
     private VoiceRecorder mVoiceRecorder;
 
+    private  boolean subjectiveFlag;
+    private  boolean objectiveFlag;
+
+    int chiefComplaint = 0;
+
+    int review = 0;
+    private  String subjectiveText ="";
+    private  String objectiveText="";
+
     boolean isFlag = false;
     private final VoiceRecorder.Callback mVoiceCallback = new VoiceRecorder.Callback() {
         @Override
@@ -86,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         public void onVoice(byte[] data, int size) {
             if (mSpeechService != null) {
                mSpeechService.recognize(data, size);
-               attemptSend(data);
+               //attemptSend(data);
 
               /*  final File file = new File(Environment.getExternalStorageDirectory(), "recording.pcm");
                 OutputStream os = null;
@@ -149,10 +158,16 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     Socket mSocket;
 
+    TextView subjective,objective;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        subjective  = (TextView) findViewById(R.id.subjective);
+        objective  =  (TextView) findViewById(R.id.objective);
+
         m_androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         {
             try {
@@ -478,9 +493,68 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                     public void run() {
                         if (isFinal) {
                             mText.setText(null);
-                            mAdapter.addResult(text);
-                            mRecyclerView.smoothScrollToPosition(0);
+                         //   mAdapter.addResult(text);
+                          //  mRecyclerView.smoothScrollToPosition(0);
+                            if(subjectiveFlag){
+                                if(subjectiveText !=null && subjectiveText.equalsIgnoreCase("")){
+                                    subjectiveText=  text.trim();
+                                }else {
+                                    subjectiveText=  subjectiveText +" "+ text.trim();
+                                }
+                                String str =  subjectiveText
+                                        .replaceAll("chief complaints","")
+                                        .replaceAll("Chief Complaints","")
+                                        .replaceAll("chief complaint","")
+                                        .replaceAll("Chief Complaint","")
+                                        .replaceAll("review of systems","")
+                                        .replaceAll("Review of Systems","")
+                                        .replaceAll("review of system","")
+                                        .replaceAll("Review of System","");
+
+                                if(str.equalsIgnoreCase("s")){
+
+                                }else {
+                                    subjective.setText(str);
+                                }
+                            }
+
+                            if(objectiveFlag){
+                                if(objectiveText!=null && objectiveText.equalsIgnoreCase("")){
+                                    objectiveText=  text.trim();
+                                }else {
+                                    objectiveText=  objectiveText +" "+ text.trim();
+                                }
+                                String str =  objectiveText
+                                        .replaceAll("chief complaints","")
+                                        .replaceAll("Chief Complaints","")
+                                        .replaceAll("chief complaint","")
+                                        .replaceAll("Chief Complaint","")
+                                        .replaceAll("review of systems","")
+                                        .replaceAll("Review of Systems","")
+                                        .replaceAll("review of system","")
+                                        .replaceAll("Review of System","");
+                                if(str.equalsIgnoreCase("s")){
+                                }else {
+                                    objective.setText(str);
+                                }
+
+                            }
                         } else {
+
+                            Log.d("pre",text);
+                            int chiefOccurCount =  count("chief complaint",text);
+                            int reviewOccCount =  count("review of system",text);
+                            if(chiefOccurCount> chiefComplaint){
+                                Log.d("bbb",text);
+                                subjectiveFlag = true;
+                                objectiveFlag = false;
+                                chiefComplaint+=1;
+                            }
+                            if(reviewOccCount>review){
+                                subjectiveFlag = false;
+                                objectiveFlag = true;
+                                review+=1;
+                            }
                             mText.setText(text);
                         }
                     }
@@ -488,6 +562,15 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
             }
         }
     };
+
+
+    public static int count(String text, String find) {
+        int index = 0, count = 0, length = find.length();
+        while( (index = text.indexOf(find, index)) != -1 ) {
+            index += length; count++;
+        }
+        return count;
+    }
 
     private static class ViewHolder extends RecyclerView.ViewHolder {
 

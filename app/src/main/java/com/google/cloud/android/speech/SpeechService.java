@@ -293,6 +293,8 @@ public class SpeechService extends Service {
      * @param stream The audio data.
      */
     public void recognizeInputStream(InputStream stream) {
+
+
         try {
             mApi.recognize(
                     RecognizeRequest.newBuilder()

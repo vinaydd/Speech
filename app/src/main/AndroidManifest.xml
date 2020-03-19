@@ -33,7 +33,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Speech"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".NewActivityCllSS"
+        <activity android:name=".MainActivity"
             android:screenOrientation="unspecified"
             >
             <intent-filter>
