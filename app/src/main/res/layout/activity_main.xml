@@ -60,16 +60,18 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:gravity="center"
+                android:layout_marginLeft="40dp"
+                android:layout_marginRight="40dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+
                 android:layout_height="wrap_content">
                 <Button
+                    android:id="@+id/button"
                     android:layout_width="match_parent"
-                    android:background="@color/primary"
                     android:text="Start Dictation"
-                    android:backgroundTint="@color/accent"
-                    android:layout_marginLeft="40dp"
-                    android:layout_marginRight="40dp"
                     android:clickable="true"
+                    android:background="@color/accent"
                     android:textColor="@android:color/white"
                     android:layout_height="wrap_content">
 
@@ -80,7 +82,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_margin="15dp"
+                android:layout_margin="8dp"
                 android:layout_height="wrap_content">
 
                 <TextView
@@ -100,9 +102,8 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_margin="10dp"
-                android:minHeight="200dp"
-                android:background="@drawable/bc"
+                android:layout_margin="8dp"
+                android:minHeight="100dp"
                 android:layout_height="wrap_content">
 
 
@@ -110,9 +111,9 @@
                     android:id="@+id/subjective"
                     android:layout_width="match_parent"
                     android:gravity="top|left"
-                    android:hint="chief complaints"
+                    android:hint="chief complaints..."
                     android:padding="4dp"
-                    android:textSize="22sp"
+                    android:textSize="15sp"
                     android:scrollbars="horizontal"
                     android:layout_marginLeft="10dp"
                     android:textColor="#504D4D"
@@ -127,7 +128,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_margin="15dp"
+                android:layout_margin="8dp"
                 android:layout_height="wrap_content">
 
                 <TextView
@@ -146,24 +147,70 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_margin="10dp"
+                android:layout_margin="8dp"
                 android:scrollbars="vertical"
-                android:background="@drawable/bc"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/objective"
                     android:layout_width="match_parent"
                     android:gravity="top|left"
-                    android:hint="review of systems"
+                    android:hint="review of systems...."
                     android:padding="4dp"
-                    android:minHeight="200dp"
-                    android:textSize="22sp"
+                    android:minHeight="100dp"
+                    android:textSize="15sp"
                     android:layout_marginLeft="10dp"
                     android:textColor="#504D4D"
                     android:layout_height="wrap_content">
                 </TextView>
             </LinearLayout>
+
+
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="8dp"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:gravity="center|left"
+                    android:text="HPI:"
+                    android:textSize="22sp"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="@android:color/black"
+                    android:layout_height="wrap_content">
+
+                </TextView>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_margin="8dp"
+                android:scrollbars="vertical"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/hpi"
+                    android:layout_width="match_parent"
+                    android:gravity="top|left"
+                    android:hint="hpi..."
+                    android:padding="4dp"
+                    android:minHeight="100dp"
+                    android:textSize="15sp"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="#504D4D"
+                    android:layout_height="wrap_content">
+                </TextView>
+            </LinearLayout>
+
+
+
+
+
         </LinearLayout>
     </ScrollView>
 

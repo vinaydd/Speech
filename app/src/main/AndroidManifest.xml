@@ -34,7 +34,7 @@
         android:theme="@style/Theme.Speech"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".MainActivity"
-            android:screenOrientation="unspecified"
+            android:screenOrientation="portrait"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

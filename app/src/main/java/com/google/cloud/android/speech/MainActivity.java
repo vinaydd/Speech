@@ -18,16 +18,17 @@ package com.google.cloud.android.speech;
 
 import android.Manifest;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.media.MediaPlayer;
+import android.media.AudioManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -42,10 +43,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.common.primitives.Bytes;
-import com.google.protobuf.ByteString;
+import com.google.type.Color;
 
 import org.json.JSONObject;
 
@@ -53,12 +55,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -69,19 +69,28 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     private static final String FRAGMENT_MESSAGE_DIALOG = "message_dialog";
     private static final String STATE_RESULTS = "results";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1;
+    int chiefComplaint = 0;
+    int review = 0;
+    int hpi_count = 0;
+    boolean isFlag = false;
+    String m_androidId;
+    Socket mSocket;
+    TextView subjective, objective, hpi;
+    Button btn;
     private SpeechService mSpeechService;
     private VoiceRecorder mVoiceRecorder;
-
-    private  boolean subjectiveFlag;
-    private  boolean objectiveFlag;
-
-    int chiefComplaint = 0;
-
-    int review = 0;
-    private  String subjectiveText ="";
-    private  String objectiveText="";
-
-    boolean isFlag = false;
+    private boolean chiefFlag;
+    private boolean reviewFlag;
+    private boolean hpiFlag;
+    private String chiefText = "";
+    private String reviewText = "";
+    private String hpi_text = "";
+    private TextToSpeech textToSpeech;
+    // Resource caches
+    private int mColorHearing;
+    private int mColorNotHearing;
+    // View references
+    private TextView mStatus;
     private final VoiceRecorder.Callback mVoiceCallback = new VoiceRecorder.Callback() {
         @Override
         public void onVoiceStart() {
@@ -94,25 +103,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         @Override
         public void onVoice(byte[] data, int size) {
             if (mSpeechService != null) {
-               mSpeechService.recognize(data, size);
-               //attemptSend(data);
-
-              /*  final File file = new File(Environment.getExternalStorageDirectory(), "recording.pcm");
-                OutputStream os = null;
-                try {
-                    os = new FileOutputStream(file);
-                    os.write(data);
-                    byte[] dataz = fullyReadFileToBytes(file);
-                    if (file.exists() && file.isFile())
-                    {
-                        file.delete();
-                    }
-                    attemptSend(dataz);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }*/
-
-                // Starts writing the bytes in it
+                mSpeechService.recognize(data, size);
 
             }
         }
@@ -127,17 +118,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
 
     };
-
-    // Resource caches
-    private int mColorHearing;
-    private int mColorNotHearing;
-
-    // View references
-    private TextView mStatus;
-    private TextView mText;
-    private ResultAdapter mAdapter;
-    private RecyclerView mRecyclerView;
-
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -153,20 +133,167 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
 
     };
+    private TextView mText;
+    private ResultAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+    private boolean isSetFlag;
+    private final SpeechService.Listener mSpeechServiceListener = new SpeechService.Listener() {
+        @Override
+        public void onSpeechRecognized(final String text, final boolean isFinal) {
+            if (isFinal) {
+                mVoiceRecorder.dismiss();
+            }
+            if (mText != null && !TextUtils.isEmpty(text)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isSetFlag) {
+                            if (isFinal) {
+                                mText.setText(null);
+                                //   mAdapter.addResult(text);
+                                //  mRecyclerView.smoothScrollToPosition(0);
+                                if (chiefFlag) {
+                                    if (chiefText != null && chiefText.equalsIgnoreCase("")) {
+                                        chiefText = text.trim();
+                                    } else {
+                                        chiefText = chiefText.trim() + " " + text.trim();
+                                    }
+                                    String str = chiefText
+                                            .replaceAll("chief complaints", "")
+                                            .replaceAll("Chief Complaints", "")
+                                            .replaceAll("chief complaint", "")
+                                            .replaceAll("Chief Complaint", "")
+                                            .replaceAll("review of systems", "")
+                                            .replaceAll("Review of Systems", "")
+                                            .replaceAll("review of system", "")
+                                            .replaceAll("Review of System", "");
 
-    String m_androidId;
+                                    if (str.equalsIgnoreCase("s")) {
 
-    Socket mSocket;
+                                    } else {
+                                        subjective.setText(str);
+                                    }
+                                }
 
-    TextView subjective,objective;
+                                if (reviewFlag) {
+                                    if (reviewText != null && reviewText.equalsIgnoreCase("")) {
+                                        reviewText = text.trim();
+                                    } else {
+                                        reviewText = reviewText.trim() + " " + text.trim();
+                                    }
+                                    String str = reviewText
+                                            .replaceAll("chief complaints", "")
+                                            .replaceAll("Chief Complaints", "")
+                                            .replaceAll("chief complaint", "")
+                                            .replaceAll("Chief Complaint", "")
+                                            .replaceAll("review of systems", "")
+                                            .replaceAll("Review of Systems", "")
+                                            .replaceAll("review of system", "")
+                                            .replaceAll("Review of System", "");
+                                    if (str.equalsIgnoreCase("s")) {
+                                    } else {
+                                        objective.setText(str);
+                                    }
+                                }
+
+
+                                if (hpiFlag) {
+                                    if (hpi_text != null && hpi_text.equalsIgnoreCase("")) {
+                                        hpi_text = text.trim();
+                                    } else {
+                                        hpi_text = hpi_text.trim() + " " + text.trim();
+                                    }
+                                    String str = hpi_text
+                                            .replaceAll("hpi", "")
+                                            .replaceAll("Hpi", "")
+                                            .replaceAll("HPI", "");
+                                    if (str.equalsIgnoreCase("s")) {
+                                    } else {
+                                        hpi.setText(str);
+                                    }
+                                }
+
+
+                            } else {
+
+                                Log.d("pre", text);
+                                int chiefOccurCount = count("chief complaint", text);
+                                int reviewOccCount = count("review of system", text);
+                                int hpiOccCount = count("hpi", text);
+                                if (chiefOccurCount > chiefComplaint) {
+                                    Log.d("pre", "sub:" + text);
+                                    chiefFlag = true;
+                                    reviewFlag = false;
+                                    hpiFlag = false;
+
+                                    //chiefComplaint+=1;
+                                }
+                                if (reviewOccCount > review) {
+                                    Log.d("pre", "obj:" + text);
+                                    chiefFlag = false;
+                                    reviewFlag = true;
+                                    hpiFlag = false;
+                                    //review+=1;
+                                }
+                                if (hpiOccCount > hpi_count) {
+                                    Log.d("pre", "obj:" + text);
+                                    chiefFlag = false;
+                                    reviewFlag = false;
+                                    hpiFlag = true;
+                                }
+                                mText.setText(text);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    };
+    private Emitter.Listener onNewMessage = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    System.out.println("data:" + data);
+                }
+            });
+        }
+    };
+
+    public static String toCSV(byte[] array) {
+        String result = "";
+        if (array.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (Byte s : array) {
+                sb.append(s).append(",");
+            }
+            result = sb.deleteCharAt(sb.length() - 1).toString();
+        }
+        return result;
+    }
+
+    public static int count(String text, String find) {
+        int index = 0, count = 0, length = find.length();
+        while ((index = text.indexOf(find, index)) != -1) {
+            index += length;
+            count++;
+        }
+        return count;
+    }
+
+
+    // Read more: https://javarevisited.blogspot.com/2016/03/how-to-convert-array-to-comma-separated-string-in-java.html#ixzz6EyacROUt
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        subjective  = (TextView) findViewById(R.id.subjective);
-        objective  =  (TextView) findViewById(R.id.objective);
+        btn = (Button) findViewById(R.id.button);
+        subjective = (TextView) findViewById(R.id.subjective);
+        objective = (TextView) findViewById(R.id.objective);
+        hpi = (TextView) findViewById(R.id.hpi);
 
         m_androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         {
@@ -195,7 +322,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         mAdapter = new ResultAdapter(results);
         mRecyclerView.setAdapter(mAdapter);
 
-
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -204,8 +330,52 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
             }
         }, 300);
 
-    }
 
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int ttsLang = textToSpeech.setLanguage(Locale.US);
+                    if (ttsLang == TextToSpeech.LANG_MISSING_DATA
+                            || ttsLang == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e("TTS", "The Language is not supported!");
+                    } else {
+                        Log.i("TTS", "Language Supported.");
+                    }
+                    Log.i("TTS", "Initialization success.");
+                } else {
+                    Toast.makeText(getApplicationContext(), "TTS Initialization failed!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        btn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                if (!isSetFlag) {
+                    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+                    String data = "Hi Doctor please proceed";
+                    Log.i("TTS", "button clicked: " + data);
+                    int speechStatus = textToSpeech.speak(data, TextToSpeech.QUEUE_FLUSH, null);
+                    if (speechStatus == TextToSpeech.ERROR) {
+                        Log.e("TTS", "Error in converting Text to Speech!");
+                    }
+                    btn.setText("stop dictation");
+                    btn.setBackgroundColor(getResources().getColor(R.color.red));
+                    isSetFlag = true;
+                } else {
+                    btn.setText("start dictation");
+                    btn.setBackgroundColor(getResources().getColor(R.color.accent));
+                    isSetFlag = false;
+                }
+
+            }
+
+        });
+
+    }
 
     public byte[] fullyReadFileToBytes(File f) throws IOException {
         int size = (int) f.length();
@@ -235,14 +405,14 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     private void attemptSend(byte[] data) {
         System.out.println(data);
-      //  printBytes(data);
+        //  printBytes(data);
 
-        String finalValues= printBytes(data);
-        byte [] datas = printBytes(data).getBytes();
-       // System.out.println(finalValues);
+        String finalValues = printBytes(data);
+        byte[] datas = printBytes(data).getBytes();
+        // System.out.println(finalValues);
 
 
-          //String  sdfs  = toCSV(data);
+        //String  sdfs  = toCSV(data);
 
 
         try {
@@ -258,16 +428,11 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
             byte[] result = baos.toByteArray();
 
-
-
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("user_id", m_androidId);
             jsonObject.put("data", result);
-           // jsonObject.put("source", "android");
-
+            // jsonObject.put("source", "android");
             System.out.println(jsonObject);
-
-
             mSocket.emit("binaryData", jsonObject);
         } catch (Exception e) {
             Log.d("sqad", e.getMessage());
@@ -275,32 +440,15 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
     }
 
-    public static String toCSV(byte[] array) {
-        String result = "";
-        if (array.length > 0) {
-            StringBuilder sb = new StringBuilder();
-            for (Byte s : array) {
-                sb.append(s).append(",");
-            }
-
-            result = sb.deleteCharAt(sb.length() - 1).toString();
-        }
-        return result;
-    }
-
-
-   // Read more: https://javarevisited.blogspot.com/2016/03/how-to-convert-array-to-comma-separated-string-in-java.html#ixzz6EyacROUt
-
-
-    public  String printBytes(byte[] array) {
-        String output ="";
+    public String printBytes(byte[] array) {
+        String output = "";
         for (int k = 0; k < array.length; k++) {
 
-          //  output   = output + "\0x" + UnicodeFormatter.byteToHex(array[k]);
-            output   = "utf8Bytes" + "[" + k + "] = " + "0x" + UnicodeFormatter.byteToHex(array[k]);
-           // System.out.println("utf8Bytes" + "[" + k + "] = " + "0x" + UnicodeFormatter.byteToHex(array[k]));
+            //  output   = output + "\0x" + UnicodeFormatter.byteToHex(array[k]);
+            output = "utf8Bytes" + "[" + k + "] = " + "0x" + UnicodeFormatter.byteToHex(array[k]);
+            // System.out.println("utf8Bytes" + "[" + k + "] = " + "0x" + UnicodeFormatter.byteToHex(array[k]));
         }
-        return  output;
+        return output;
     }
 
     private void gotojoinSoket() {
@@ -335,7 +483,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     }
 
-
     public void stopeGoogleStreeming() {
         try {
             JSONObject jsonObject = new JSONObject();
@@ -350,28 +497,12 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         mSocket.disconnect();
         mSocket.off("speechData", onNewMessage);
     }
-
-
-    private Emitter.Listener onNewMessage = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    System.out.println("data:" + data);
-                }
-            });
-        }
-    };
-
 
     @Override
     protected void onStart() {
@@ -481,97 +612,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                 REQUEST_RECORD_AUDIO_PERMISSION);
     }
 
-    private final SpeechService.Listener mSpeechServiceListener = new SpeechService.Listener() {
-        @Override
-        public void onSpeechRecognized(final String text, final boolean isFinal) {
-            if (isFinal) {
-                mVoiceRecorder.dismiss();
-            }
-            if (mText != null && !TextUtils.isEmpty(text)) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isFinal) {
-                            mText.setText(null);
-                         //   mAdapter.addResult(text);
-                          //  mRecyclerView.smoothScrollToPosition(0);
-                            if(subjectiveFlag){
-                                if(subjectiveText !=null && subjectiveText.equalsIgnoreCase("")){
-                                    subjectiveText=  text.trim();
-                                }else {
-                                    subjectiveText=  subjectiveText +" "+ text.trim();
-                                }
-                                String str =  subjectiveText
-                                        .replaceAll("chief complaints","")
-                                        .replaceAll("Chief Complaints","")
-                                        .replaceAll("chief complaint","")
-                                        .replaceAll("Chief Complaint","")
-                                        .replaceAll("review of systems","")
-                                        .replaceAll("Review of Systems","")
-                                        .replaceAll("review of system","")
-                                        .replaceAll("Review of System","");
-
-                                if(str.equalsIgnoreCase("s")){
-
-                                }else {
-                                    subjective.setText(str);
-                                }
-                            }
-
-                            if(objectiveFlag){
-                                if(objectiveText!=null && objectiveText.equalsIgnoreCase("")){
-                                    objectiveText=  text.trim();
-                                }else {
-                                    objectiveText=  objectiveText +" "+ text.trim();
-                                }
-                                String str =  objectiveText
-                                        .replaceAll("chief complaints","")
-                                        .replaceAll("Chief Complaints","")
-                                        .replaceAll("chief complaint","")
-                                        .replaceAll("Chief Complaint","")
-                                        .replaceAll("review of systems","")
-                                        .replaceAll("Review of Systems","")
-                                        .replaceAll("review of system","")
-                                        .replaceAll("Review of System","");
-                                if(str.equalsIgnoreCase("s")){
-                                }else {
-                                    objective.setText(str);
-                                }
-
-                            }
-                        } else {
-
-                            Log.d("pre",text);
-                            int chiefOccurCount =  count("chief complaint",text);
-                            int reviewOccCount =  count("review of system",text);
-                            if(chiefOccurCount> chiefComplaint){
-                                Log.d("bbb",text);
-                                subjectiveFlag = true;
-                                objectiveFlag = false;
-                                chiefComplaint+=1;
-                            }
-                            if(reviewOccCount>review){
-                                subjectiveFlag = false;
-                                objectiveFlag = true;
-                                review+=1;
-                            }
-                            mText.setText(text);
-                        }
-                    }
-                });
-            }
-        }
-    };
-
-
-    public static int count(String text, String find) {
-        int index = 0, count = 0, length = find.length();
-        while( (index = text.indexOf(find, index)) != -1 ) {
-            index += length; count++;
-        }
-        return count;
-    }
-
     private static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView text;
@@ -618,8 +658,4 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
 
     }
-
-
-
-
 }
